@@ -8,12 +8,27 @@ export const CONFIG = {
   // Project settings → General → Your apps → Web app → "SDK setup and configuration"
   // While apiKey starts with "YOUR", the app runs in DEMO mode (bookings saved only in this browser).
   firebase: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "000000000000",
-    appId: "YOUR_APP_ID",
+   // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA1bNdTFw5oBu4xqZ1lK3rexRZchulvf34",
+  authDomain: "microscope-booking.firebaseapp.com",
+  projectId: "microscope-booking",
+  storageBucket: "microscope-booking.firebasestorage.app",
+  messagingSenderId: "1000748421043",
+  appId: "1:1000748421043:web:d2cb4af3973d5c7a11c5c6",
+  measurementId: "G-6VGDH0MK3F"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
   },
 
   // Admin email(s) — must ALSO be listed in firestore.rules (isAdmin function)
