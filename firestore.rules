@@ -1,0 +1,73 @@
+rules_version = '2';
+
+// BX53 booking — Firestore security rules
+// Paste into Firebase console → Firestore Database → Rules → Publish.
+// Keep the numbers in sync with config.js (minutes after midnight).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+
+    // >>> Put your admin email(s) here (same as config.js adminEmails) <<<
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email in ['admin@example.com'];
+    }
+
+    function validTimes(d) {
+      return d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.start is int && d.end is int
+        && d.start % 15 == 0 && d.end % 15 == 0
+        && d.start >= 480 && d.end <= 1200 && d.start < d.end;
+    }
+
+    // Weekday of the booking date: 1 = Mon … 5 = Fri, 6 = Sat, 7 = Sun
+    function dow(d) {
+      return timestamp.date(int(d.date[0:4]), int(d.date[5:7]), int(d.date[8:10])).dayOfWeek();
+    }
+    function isOffDay(d) { return dow(d) in [5, 6]; }   // Friday & Saturday
+
+    // Booking date must be within the 7-day window (small slack for time zones)
+    function inWindow(d) {
+      return timestamp.date(int(d.date[0:4]), int(d.date[5:7]), int(d.date[8:10]))
+             < request.time + duration.value(7, 'd');
+    }
+
+    // Workdays: female 08:00–14:00, male 08:00–20:00 (first half if free)
+    // Off days: male only, 08:00–20:00. Max 4 h per booking.
+    function validMemberBooking(d) {
+      return d.type == 'booking'
+        && d.end - d.start <= 240
+        && inWindow(d)
+        && ((d.gender == 'female' && d.end <= 840 && !isOffDay(d))
+         || (d.gender == 'male'));
+    }
+
+    match /bookings/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && validTimes(request.resource.data)
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
+        && request.resource.data.purpose is string && request.resource.data.purpose.size() > 0 && request.resource.data.purpose.size() <= 200
+        && (validMemberBooking(request.resource.data) || isAdmin());
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow update: if false;
+    }
+
+    // One lock per 15-min step. "create" fails if the lock already exists,
+    // which is what stops double-booking.
+    match /locks/{lockId} {
+      allow read: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.m is int
+        && request.resource.data.m % 15 == 0
+        && request.resource.data.m >= 480 && request.resource.data.m < 1200
+        && lockId == request.resource.data.date + '_' + string(request.resource.data.m);
+      allow delete: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      allow update: if false;
+    }
+  }
+}

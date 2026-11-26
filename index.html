@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BX53 Microscope Booking</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="5" fill="currentColor"/><path d="M16 3v6M16 23v6M3 16h6M23 16h6" stroke="currentColor" stroke-width="2"/></svg>
+      </div>
+      <div>
+        <h1 id="title">BX53 Microscope Booking</h1>
+        <p class="sub" id="subtitle"></p>
+      </div>
+    </div>
+    <div class="me">
+      <span id="meLabel"></span>
+      <button class="link" id="changeMe">Change</button>
+    </div>
+  </header>
+
+  <div id="demoBanner" class="banner" hidden>
+    Demo mode: bookings are saved only in this browser. Add your Firebase config in <code>config.js</code> to share them with the lab.
+  </div>
+
+  <main>
+    <section class="toolbar">
+      <div class="nav">
+        <button id="prevWeek" aria-label="Previous week">‹</button>
+        <button id="todayBtn">Today</button>
+        <button id="nextWeek" aria-label="Next week">›</button>
+        <span id="rangeLabel" class="range"></span>
+      </div>
+      <div class="legend" id="legend"></div>
+      <button class="primary" id="newBooking">+ Book a slot</button>
+    </section>
+
+    <section class="calendar-wrap">
+      <div class="calendar" id="calendar"></div>
+    </section>
+
+    <section class="mine">
+      <h2>My upcoming bookings</h2>
+      <ul id="myList" class="list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <span id="footerInfo"></span>
+    <span class="dot">·</span>
+    <button class="link" id="adminBtn">Admin</button>
+  </footer>
+
+  <!-- Profile dialog -->
+  <dialog id="profileDlg">
+    <form method="dialog" id="profileForm">
+      <h3>Who's booking?</h3>
+      <p class="hint">Saved on this device. Your name is shown on your bookings.</p>
+      <label>Full name
+        <input name="name" required maxlength="60" autocomplete="name" />
+      </label>
+      <fieldset class="seg">
+        <legend>Session group</legend>
+        <div id="genderOpts"></div>
+      </fieldset>
+      <label>Phone or email <span class="opt">(optional, visible to lab)</span>
+        <input name="contact" maxlength="60" />
+      </label>
+      <div class="actions">
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Booking dialog -->
+  <dialog id="bookDlg">
+    <form id="bookForm">
+      <h3 id="bookTitle">Book the microscope</h3>
+      <p class="hint" id="bookHint"></p>
+      <label>Date
+        <input type="date" name="date" required />
+      </label>
+      <div class="row">
+        <label>Start
+          <select name="start" required></select>
+        </label>
+        <label>End
+          <select name="end" required></select>
+        </label>
+      </div>
+      <label>Purpose / samples
+        <textarea name="purpose" required maxlength="200" rows="2" placeholder="e.g. Gill histology slides, 40× imaging"></textarea>
+      </label>
+      <label class="check" id="maintWrap" hidden>
+        <input type="checkbox" name="maintenance" /> Block as maintenance / unavailable
+      </label>
+      <p class="error" id="bookError"></p>
+      <div class="actions">
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button type="submit" class="primary" id="bookSubmit">Confirm booking</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Detail dialog -->
+  <dialog id="detailDlg">
+    <div class="detail">
+      <h3 id="dTitle"></h3>
+      <dl id="dList"></dl>
+      <p class="error" id="dError"></p>
+      <div class="actions">
+        <button type="button" class="ghost" data-close>Close</button>
+        <button type="button" class="danger" id="dCancel" hidden>Cancel booking</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Admin dialog -->
+  <dialog id="adminDlg">
+    <form id="adminForm">
+      <h3>Admin sign-in</h3>
+      <p class="hint" id="adminHint">Admins can cancel any booking and block maintenance time.</p>
+      <div id="adminFields">
+        <label>Email <input type="email" name="email" required /></label>
+        <label>Password <input type="password" name="password" required /></label>
+      </div>
+      <p class="error" id="adminError"></p>
+      <div class="actions">
+        <button type="button" class="ghost" data-close>Close</button>
+        <button type="submit" class="primary" id="adminSubmit">Sign in</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
