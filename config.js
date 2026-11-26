@@ -16,6 +16,9 @@ export const CONFIG = {
     appId: "1:1000748421043:web:d2cb4af3973d5c7a11c5c6",
   },
 
+  // Hidden email domain used behind usernames (members never see or type it)
+  userDomain: "bx53.lab",
+
   // Admin email(s) — must ALSO be listed in firestore.rules (isAdmin function)
   adminEmails: ["sadat43747@bau.edu.bd"],
 

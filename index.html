@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <header class="top">
@@ -21,8 +21,11 @@
       </div>
     </div>
     <div class="me">
-      <span id="meLabel"></span>
-      <button class="link" id="changeMe">Change</button>
+      <span id="meLabel" hidden></span>
+      <button class="link" id="membersBtn" hidden>Members</button>
+      <button class="link" id="pwBtn" hidden>Password</button>
+      <button class="link" id="logoutBtn" hidden>Sign out</button>
+      <button class="primary sm" id="loginBtn">Sign in</button>
     </div>
   </header>
 
@@ -54,30 +57,7 @@
 
   <footer>
     <span id="footerInfo"></span>
-    <span class="dot">·</span>
-    <button class="link" id="adminBtn">Admin</button>
   </footer>
-
-  <!-- Profile dialog -->
-  <dialog id="profileDlg">
-    <form method="dialog" id="profileForm">
-      <h3>Who's booking?</h3>
-      <p class="hint">Saved on this device. Your name is shown on your bookings.</p>
-      <label>Full name
-        <input name="name" required maxlength="60" autocomplete="name" />
-      </label>
-      <fieldset class="seg">
-        <legend>Session group</legend>
-        <div id="genderOpts"></div>
-      </fieldset>
-      <label>Phone or email <span class="opt">(optional, visible to lab)</span>
-        <input name="contact" maxlength="60" />
-      </label>
-      <div class="actions">
-        <button type="submit" class="primary">Save</button>
-      </div>
-    </form>
-  </dialog>
 
   <!-- Booking dialog -->
   <dialog id="bookDlg">
@@ -122,25 +102,74 @@
     </div>
   </dialog>
 
-  <!-- Admin dialog -->
-  <dialog id="adminDlg">
-    <form id="adminForm">
-      <h3>Admin sign-in</h3>
-      <p class="hint" id="adminHint">Admins can cancel any booking and block maintenance time.</p>
-      <div id="adminFields">
-        <label>Email <input type="email" name="email" required /></label>
-        <label>Password <input type="password" name="password" required /></label>
-      </div>
-      <p class="error" id="adminError"></p>
+  <!-- Login dialog -->
+  <dialog id="loginDlg">
+    <form id="loginForm">
+      <h3>Sign in</h3>
+      <p class="hint">Use the username and password the lab admin gave you.</p>
+      <label>Username
+        <input name="username" required autocomplete="username" autocapitalize="none" spellcheck="false" />
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <p class="error" id="loginError"></p>
       <div class="actions">
-        <button type="button" class="ghost" data-close>Close</button>
-        <button type="submit" class="primary" id="adminSubmit">Sign in</button>
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button type="submit" class="primary" id="loginSubmit">Sign in</button>
       </div>
     </form>
   </dialog>
 
+  <!-- Change password dialog -->
+  <dialog id="pwDlg">
+    <form id="pwForm">
+      <h3>Change password</h3>
+      <label>Current password
+        <input type="password" name="old" required autocomplete="current-password" />
+      </label>
+      <label>New password <span class="opt">(at least 6 characters)</span>
+        <input type="password" name="new1" required minlength="6" autocomplete="new-password" />
+      </label>
+      <label>Repeat new password
+        <input type="password" name="new2" required minlength="6" autocomplete="new-password" />
+      </label>
+      <p class="error" id="pwError"></p>
+      <div class="actions">
+        <button type="button" class="ghost" data-close>Cancel</button>
+        <button type="submit" class="primary" id="pwSubmit">Save password</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Members (admin) dialog -->
+  <dialog id="membersDlg" class="wide">
+    <div class="detail">
+      <h3>Lab members</h3>
+      <form id="addForm" class="addform">
+        <input name="name" placeholder="Full name" required maxlength="60" />
+        <input name="username" placeholder="username" required pattern="[a-z0-9_-]{3,20}" title="3–20 lowercase letters, numbers, - or _" autocapitalize="none" spellcheck="false" />
+        <select name="gender" required id="addGender"></select>
+        <div class="pwrow">
+          <input name="password" placeholder="Password" required minlength="6" />
+          <button type="button" class="ghost" id="genPw" title="Generate password">Generate</button>
+        </div>
+        <button type="submit" class="primary" id="addSubmit">Add member</button>
+      </form>
+      <p class="error" id="membersError"></p>
+      <div id="newCreds" class="creds" hidden></div>
+      <table class="mtable">
+        <thead><tr><th>Name</th><th>Username</th><th>Group</th><th></th></tr></thead>
+        <tbody id="membersBody"></tbody>
+      </table>
+      <div class="actions">
+        <button type="button" class="ghost" data-close>Close</button>
+      </div>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" role="status"></div>
 
-  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="app.js?v=4"></script>
 </body>
 </html>

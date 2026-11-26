@@ -2,18 +2,35 @@
 
 A shared booking calendar for the lab's Olympus BX53 + EP50 camera. Lab members can see every booking and book any free time. It runs on GitHub Pages (free hosting), and Firebase Firestore (free tier) stores the bookings.
 
+**How access works**
+- Anyone with the link can **see** the schedule.
+- To **book or cancel**, members sign in with the username and password the admin gave them. They can then use any phone or computer.
+- Each member's name and group (female/male) is set by the admin, and the database checks every booking against it.
+- Members can change their own password (**Password** link at the top).
+
 **Rules built in**
 - Hours: 8:00 AM–8:00 PM
 - Workdays (Sun–Thu): 8:00 AM–2:00 PM is female priority, but male members can also book any slot there that is still free. 2:00–8:00 PM is for male members only
 - Off days (Fri & Sat): male members only, all day
 - Bookings open for 7 days (today plus the next 6)
-- Each person can hold bookings on at most 3 different days, and can have several bookings on the same day
+- Each person can hold bookings on at most 3 different days
 - Any start and end time in 15-minute steps, up to 4 h per booking
-- Two people can't book overlapping times; the database rejects the second booking
-- Only the person who made a booking (from the same browser) or the admin can cancel it
-- The admin can block time for maintenance, and maintenance blocks ignore all limits
+- No overlapping bookings (enforced by the database)
+- The admin can cancel anything and block time for maintenance
 
-All of these can be changed in `config.js`. If you change the times or limits, update `firestore.rules` too.
+## Admin: managing members
+1. Click **Sign in** and enter your admin **email** and password.
+2. Click **Members**. Fill in full name, a short username (e.g. `rina`), the group, and a password (or press **Generate**), then press **Add member**.
+3. Press **Copy login message** and paste it to the member on WhatsApp or Messenger.
+4. **Reset password** gives the member a new generated password. Their bookings are kept.
+5. **Remove** blocks the account from signing in and booking.
+
+Behind the scenes each username gets a hidden login email (e.g. `rina.x7k2@bx53.lab`). Members never see or type it.
+
+## One-time Firebase setup for accounts
+1. **Firestore Database → Rules**: paste the whole `firestore.rules` file and click **Publish**.
+2. **Authentication → Sign-in method**: keep **Email/Password** enabled. **Anonymous** is no longer used, so you can disable it.
+3. **Authentication → Users**: make sure your admin email exists there.
 
 ---
 
@@ -23,7 +40,6 @@ All of these can be changed in `config.js`. If you change the times or limits, u
 1. Go to https://console.firebase.google.com and click **Add project** (Google Analytics is not needed).
 2. **Build → Firestore Database → Create database**. Pick a location close to Bangladesh (for example `asia-south1`, Mumbai) and start in **production mode**.
 3. **Build → Authentication → Get started**, then enable:
-   - **Anonymous** (lab members use this, with no login needed)
    - **Email/Password**. Then open the **Users** tab → **Add user** and create the admin account (your email and a password).
 4. **Project settings (gear) → General → Your apps → Web (`</>`)**. Register an app (no hosting needed) and copy the `firebaseConfig` object.
 
@@ -46,9 +62,7 @@ Share the link with the lab. That's it.
 
 ## Notes
 - The Firebase web config being visible in a public repo is normal and safe: access is controlled by `firestore.rules`, not by hiding the key.
-- Sign-in is anonymous and tied to the browser. If a member clears their browser data or books from another device, they can't cancel the old booking, and the admin will need to cancel it.
-- Members choose their own session group. The app enforces each group's time window, but it can't verify who someone is. It runs on trust, like a paper logbook.
-- Before you add the Firebase config, the app runs in **demo mode**, where bookings stay in your browser only. This is useful for trying it out. The demo admin password is `demo`.
+- Before you add the Firebase config, the app runs in **demo mode**, where bookings stay in your browser only. This is useful for trying it out. Sign in with an admin email and the password `demo`.
 - To change the off days, edit `offDays` in `config.js` **and** `isOffDay` in `firestore.rules`. Note that the rules count days as 1 = Mon … 7 = Sun, while `config.js` uses 0 = Sun … 6 = Sat. Friday (5) and Saturday (6) are the same number in both.
-- The 3-days-per-person limit is checked in the app by browser and name. Someone could get around it by using another device and a different name.
+- The 3-days-per-person limit is checked in the app by username (not by the database).
 - Free-tier limits (50k reads/day and 20k writes/day) are far more than a lab needs.

@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// BX53 booking — Firestore security rules
+// BX53 booking — Firestore security rules (member accounts version)
 // Paste into Firebase console → Firestore Database → Rules → Publish.
 // Keep the numbers in sync with config.js (minutes after midnight).
 
@@ -9,10 +9,19 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
 
-    // >>> Put your admin email(s) here (same as config.js adminEmails) <<<
+    // >>> Admin email(s): same as config.js adminEmails <<<
     function isAdmin() {
+      return signedIn() && request.auth.token.email in ['sadat43747@bau.edu.bd'];
+    }
+
+    // The signed-in person's member record (created by the admin)
+    function me() {
+      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data;
+    }
+    function isMember() {
       return signedIn()
-        && request.auth.token.email in ['sadat43747@bau.edu.bd'];
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && me().active == true;
     }
 
     function validTimes(d) {
@@ -22,26 +31,27 @@ service cloud.firestore {
         && d.start >= 480 && d.end <= 1200 && d.start < d.end;
     }
 
-    // Weekday of the booking date: 1 = Mon … 5 = Fri, 6 = Sat, 7 = Sun
+    // 1 = Mon … 5 = Fri, 6 = Sat, 7 = Sun
     function dow(d) {
       return timestamp.date(int(d.date[0:4]), int(d.date[5:7]), int(d.date[8:10])).dayOfWeek();
     }
     function isOffDay(d) { return dow(d) in [5, 6]; }   // Friday & Saturday
 
-    // Booking date must be within the 7-day window (small slack for time zones)
     function inWindow(d) {
       return timestamp.date(int(d.date[0:4]), int(d.date[5:7]), int(d.date[8:10]))
              < request.time + duration.value(7, 'd');
     }
 
-    // Workdays: female 08:00–14:00, male 08:00–20:00 (first half if free)
-    // Off days: male only, 08:00–20:00. Max 4 h per booking.
+    // Workdays: female 08:00–14:00, male 08:00–20:00. Off days: male only. Max 4 h.
+    // Name, username and group must match the member record, so nobody can book as someone else.
     function validMemberBooking(d) {
+      let m = me();
       return d.type == 'booking'
+        && d.username == m.username && d.name == m.name && d.gender == m.gender
         && d.end - d.start <= 240
         && inWindow(d)
-        && ((d.gender == 'female' && d.end <= 840 && !isOffDay(d))
-         || (d.gender == 'male'));
+        && ((m.gender == 'female' && d.end <= 840 && !isOffDay(d))
+         || (m.gender == 'male'));
     }
 
     match /bookings/{id} {
@@ -49,15 +59,17 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && validTimes(request.resource.data)
-        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
-        && request.resource.data.purpose is string && request.resource.data.purpose.size() > 0 && request.resource.data.purpose.size() <= 200
-        && (validMemberBooking(request.resource.data) || isAdmin());
-      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+        && request.resource.data.purpose is string
+        && request.resource.data.purpose.size() > 0 && request.resource.data.purpose.size() <= 200
+        && (isAdmin() || (isMember() && validMemberBooking(request.resource.data)));
+      allow delete: if isAdmin()
+        || (isMember() && resource.data.username == me().username);
       allow update: if false;
     }
 
     // One lock per 15-min step. "create" fails if the lock already exists,
-    // which is what stops double-booking.
+    // which is what stops double-booking. No extra lookups here on purpose
+    // (a booking writes up to 16 locks in one batch).
     match /locks/{lockId} {
       allow read: if isAdmin();
       allow create: if signedIn()
@@ -66,8 +78,25 @@ service cloud.firestore {
         && request.resource.data.m % 15 == 0
         && request.resource.data.m >= 480 && request.resource.data.m < 1200
         && lockId == request.resource.data.date + '_' + string(request.resource.data.m);
-      allow delete: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      // Owner, admin, or anyone deleting the booking the lock belongs to (in the same batch)
+      allow delete: if signedIn() && (
+           resource == null
+        || resource.data.uid == request.auth.uid
+        || isAdmin()
+        || !existsAfter(/databases/$(database)/documents/bookings/$(resource.data.bookingId)));
       allow update: if false;
+    }
+
+    // Member records: admin only writes; signed-in users can read (to load their own profile)
+    match /members/{uid} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // username → hidden login email. Public read so the login box can look it up.
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
