@@ -32,12 +32,12 @@ const analytics = getAnalytics(app);
   },
 
   // Admin email(s) — must ALSO be listed in firestore.rules (isAdmin function)
-  adminEmails: ["admin@example.com"],
+  adminEmails: ["sadat43747@bau.edu.bd"],
 
   labName: "Department of Fisheries Management, BAU",
   instrument: "Olympus BX53 + EP50 camera",
-  location: "Lab room —",            // e.g. "Room 214, Fisheries Building"
-  contact: "Lab admin",              // shown in the footer
+  location: "Department Building 1st Floor",            // e.g. "Room 214, Fisheries Building"
+  contact: "Md Ashfaq Sadat, +8801727663491",              // shown in the footer
 
   // Times are minutes after midnight (480 = 8:00 AM, 840 = 2:00 PM, 1200 = 8:00 PM)
   dayStart: 480,
