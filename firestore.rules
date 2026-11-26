@@ -60,7 +60,9 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && validTimes(request.resource.data)
         && request.resource.data.purpose is string
-        && request.resource.data.purpose.size() > 0 && request.resource.data.purpose.size() <= 200
+        && request.resource.data.purpose.size() > 0 && request.resource.data.purpose.size() <= 400
+        && (!('purposes' in request.resource.data) || (request.resource.data.purposes is list && request.resource.data.purposes.size() <= 20))
+        && (!('spec' in request.resource.data) || (request.resource.data.spec is string && request.resource.data.spec.size() <= 150))
         && (isAdmin() || (isMember() && validMemberBooking(request.resource.data)));
       allow delete: if isAdmin()
         || (isMember() && resource.data.username == me().username);

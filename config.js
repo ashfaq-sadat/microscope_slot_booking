@@ -49,6 +49,19 @@ export const CONFIG = {
   },
   firstHalfEnd: 840,        // where the female-priority half ends (for shading)
 
+  // Purpose options shown as tick boxes when booking ("Other" is added automatically)
+  purposes: [
+    "Histology / tissue sections",
+    "Blood smear / haematology",
+    "Microplastic identification",
+    "Plankton / algae identification",
+    "Parasite / disease diagnosis",
+    "Gut content analysis",
+    "Egg / larvae / embryo imaging",
+    "Cell counting",
+    "Photomicrography only",
+  ],
+
   stepMinutes: 15,          // start/end times snap to this
   maxBookingMinutes: 240,   // longest single booking (admin exempt)
   bookingWindowDays: 7,     // today + next 6 days are open for booking

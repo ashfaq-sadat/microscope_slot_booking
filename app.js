@@ -1,4 +1,4 @@
-import { CONFIG } from "./config.js?v=4";
+import { CONFIG } from "./config.js?v=6";
 
 /* ---------------- helpers ---------------- */
 const $ = (s) => document.querySelector(s);
@@ -224,6 +224,21 @@ $("#legend").innerHTML =
   `<span><i class="sw" style="background:var(--book-mine)"></i>Mine</span><span><i class="sw" style="background:var(--book)"></i>Booked</span>`;
 $("#addGender").innerHTML = `<option value="">Group…</option>` + Object.entries(CONFIG.groups).map(([k, g]) => `<option value="${k}">${esc(g.label)}</option>`).join("");
 
+const OTHER = "Other";
+$("#purposeOpts").innerHTML = [...CONFIG.purposes, OTHER].map((p) =>
+  `<label><input type="checkbox" name="purposes" value="${esc(p)}" /> ${esc(p)}</label>`).join("");
+const purposeBoxes = () => [...document.querySelectorAll('#purposeOpts input[name="purposes"]')];
+const checkedPurposes = () => purposeBoxes().filter((x) => x.checked).map((x) => x.value);
+function updateSpecHint() {
+  const other = checkedPurposes().includes(OTHER);
+  $("#specHint").textContent = other ? "(required for “Other”: say what you'll do)" : "(optional: samples, no. of slides, magnification…)";
+  $("#bookForm").spec.required = other;
+}
+$("#purposeOpts").addEventListener("change", () => { updateSpecHint(); $(".purposes").classList.remove("invalid"); $("#bookError").textContent = ""; });
+// Old bookings only have a single purpose string; newer ones also store the list and the specification
+const purposeList = (b) => (Array.isArray(b.purposes) && b.purposes.length ? b.purposes : [b.purpose].filter(Boolean));
+const purposeShort = (b) => b.type === "maintenance" ? (b.spec || b.purpose || "") : purposeList(b).join(", ") + (b.spec ? ` · ${b.spec}` : "");
+
 document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
 
 function renderMe() {
@@ -382,7 +397,7 @@ function render() {
         style="top:calc(${px(b.start)} + 1px);height:calc(${h / 60} * var(--hour) - 2px)" title="${esc(b.name)} · ${fmt(b.start)}–${fmt(b.end)}">
         <span class="t">${fmt(b.start)}–${fmt(b.end)}</span>
         <span class="n">${b.type === "maintenance" ? "Maintenance" : esc(b.name)}</span>
-        ${h >= 60 ? `<span class="p">${esc(b.purpose)}</span>` : ""}</button>`;
+        ${h >= 60 ? `<span class="p">${esc(purposeShort(b))}</span>` : ""}</button>`;
     }
     html += `</div>`;
   }
@@ -400,7 +415,7 @@ function renderMine() {
   if (!user) { $("#myList").innerHTML = `<li class="empty">Sign in to see and manage your bookings.</li>`; return; }
   const mine = upcomingMine();
   $("#myList").innerHTML = mine.length
-    ? mine.map((b) => `<li><div><div class="when">${fmtDate(b.date)} · ${fmt(b.start)}–${fmt(b.end)}</div><div class="what">${esc(b.purpose)}</div></div>
+    ? mine.map((b) => `<li><div><div class="when">${fmtDate(b.date)} · ${fmt(b.start)}–${fmt(b.end)}</div><div class="what">${esc(purposeShort(b))}</div></div>
         <button class="ghost" data-mine="${b.id}">Details</button></li>`).join("")
     : `<li class="empty">No upcoming bookings.</li>`;
 }
@@ -466,6 +481,7 @@ function openBooking(date, start) {
   if (!user) return openLogin();
   if (!canBook()) return toast("Your account can't book. Ask the lab admin.");
   bf.reset();
+  updateSpecHint(); $(".purposes").classList.remove("invalid");
   $("#bookError").textContent = "";
   $("#maintWrap").hidden = !user.isAdmin;
   bf.date.min = todayStr(); bf.date.max = user.isAdmin ? "" : maxDateStr();
@@ -495,10 +511,20 @@ bf.addEventListener("submit", async (e) => {
     name: isMaint ? "Maintenance" : (m ? m.name : "Lab admin"),
     username: isMaint ? "admin" : (m ? m.username : "admin"),
     gender: isMaint || !m ? "admin" : m.gender,
-    purpose: bf.purpose.value.trim(),
+    purposes: isMaint ? [] : checkedPurposes(),
+    spec: bf.spec.value.trim(),
+    purpose: "",
     type: isMaint ? "maintenance" : "booking",
   };
   if (!b.start || !b.end || b.end <= b.start) return (err.textContent = "Pick a valid start and end time.");
+  if (isMaint) {
+    if (!b.spec) return (err.textContent = "Add a note in Specification (e.g. servicing, lamp change).");
+    b.purpose = "Maintenance: " + b.spec;
+  } else {
+    if (!b.purposes.length) { $(".purposes").classList.add("invalid"); return (err.textContent = "Tick at least one purpose."); }
+    if (b.purposes.includes(OTHER) && !b.spec) return (err.textContent = "You ticked “Other”, so please describe it in Specification.");
+    b.purpose = (b.purposes.join(", ") + (b.spec ? " — " + b.spec : "")).slice(0, 400);
+  }
   if (bookingsFor(b.date).some((x) => x.start < b.end && b.start < x.end)) return (err.textContent = "That overlaps an existing booking.");
   if (m && !isMaint) {
     if (isClosed(b.date)) return (err.textContent = "The lab is closed on this day.");
@@ -533,10 +559,16 @@ function openDetail(b) {
   const rows = [
     ["Date", fmtDate(b.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })],
     ["Time", `${fmt(b.start)} – ${fmt(b.end)} (${(b.end - b.start) / 60} h)`],
-    ["Purpose", b.purpose],
   ];
+  const pl = purposeList(b);
   if (b.type !== "maintenance") rows.push(["Group", groupLabel(b.gender)]);
-  $("#dList").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  let html = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  if (b.type === "maintenance") html += `<dt>Note</dt><dd>${esc(b.spec || b.purpose)}</dd>`;
+  else {
+    html += `<dt>Purpose</dt><dd>${pl.length > 1 ? `<ul>${pl.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : esc(pl[0] || "—")}</dd>`;
+    if (b.spec) html += `<dt>Specification</dt><dd>${esc(b.spec)}</dd>`;
+  }
+  $("#dList").innerHTML = html;
   $("#dCancel").hidden = !(isMine(b) || user?.isAdmin);
   $("#detailDlg").showModal();
 }

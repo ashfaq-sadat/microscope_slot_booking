@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
   <header class="top">
@@ -75,8 +75,12 @@
           <select name="end" required></select>
         </label>
       </div>
-      <label>Purpose / samples
-        <textarea name="purpose" required maxlength="200" rows="2" placeholder="e.g. Gill histology slides, 40× imaging"></textarea>
+      <fieldset class="purposes">
+        <legend>Purpose <span class="opt">(tick all that apply)</span></legend>
+        <div id="purposeOpts" class="chips"></div>
+      </fieldset>
+      <label>Specification <span class="opt" id="specHint">(optional: samples, no. of slides, magnification…)</span>
+        <textarea name="spec" maxlength="150" rows="2" placeholder="e.g. 12 gill slides, H&amp;E, 10× and 40×"></textarea>
       </label>
       <label class="check" id="maintWrap" hidden>
         <input type="checkbox" name="maintenance" /> Block as maintenance / unavailable
@@ -170,6 +174,6 @@
 
   <div id="toast" class="toast" role="status"></div>
 
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="app.js?v=6"></script>
 </body>
 </html>

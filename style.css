@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #f6f5f1;
   --paper: #ffffff;
@@ -155,3 +156,13 @@ dialog.wide { width: min(760px, 96vw); }
   .addform .pwrow { grid-column: span 2; }
   .addform .primary { grid-column: span 2; }
 }
+
+/* Purpose tick boxes */
+.purposes { border: 0; padding: 0; margin: 0; }
+.purposes legend { font-size: .85rem; font-weight: 500; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; font-size: .84rem; border: 1px solid var(--line); border-radius: 99px; padding: 5px 11px; cursor: pointer; user-select: none; }
+.chips label:has(input:checked) { border-color: var(--accent); background: #eef6f5; color: var(--accent); }
+.chips input { width: auto; margin: 0; accent-color: var(--accent); }
+.purposes.invalid .chips label { border-color: var(--danger); }
+dd ul { margin: 0; padding-left: 18px; }

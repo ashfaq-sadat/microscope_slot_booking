@@ -15,6 +15,7 @@ A shared booking calendar for the lab's Olympus BX53 + EP50 camera. Lab members 
 - Bookings open for 7 days (today plus the next 6)
 - Each person can hold bookings on at most 3 different days
 - Any start and end time in 15-minute steps, up to 4 h per booking
+- Purpose is chosen from tick boxes (several allowed) plus **Other**. A **Specification** box takes details and is required when Other is ticked. Edit the list in `config.js` → `purposes`
 - No overlapping bookings (enforced by the database)
 - The admin can cancel anything and block time for maintenance
 
