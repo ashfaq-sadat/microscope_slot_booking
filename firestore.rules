@@ -12,7 +12,7 @@ service cloud.firestore {
     // >>> Put your admin email(s) here (same as config.js adminEmails) <<<
     function isAdmin() {
       return signedIn()
-        && request.auth.token.email in ['admin@example.com'];
+        && request.auth.token.email in ['sadat43747@bau.edu.bd'];
     }
 
     function validTimes(d) {
